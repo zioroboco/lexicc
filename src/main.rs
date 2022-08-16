@@ -1,4 +1,4 @@
-use aws_sdk_polly::model::{Engine, OutputFormat, VoiceId};
+use aws_sdk_polly::model::{Engine, OutputFormat, TextType, VoiceId};
 use aws_sdk_polly::Client;
 use rodio::{Decoder, OutputStream, Sink};
 use std::io::BufReader;
@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
 const FILENAME: &str = "out.ogg";
-const TEXT: &str = "Hello, world!";
+const TEXT: &str = "<speak>Hello, world!</speak>";
 const APPNAME: &str = "lexicc";
 
 fn state_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
@@ -29,6 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let resp = client
         .synthesize_speech()
         .output_format(OutputFormat::OggVorbis)
+        .text_type(TextType::Ssml)
         .text(TEXT)
         .voice_id(VoiceId::Joanna)
         .engine(Engine::Neural)
