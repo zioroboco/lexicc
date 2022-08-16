@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
 const FILENAME: &str = "out.ogg";
-const TEXT: &str = "<speak>Hello, world!</speak>";
+const TEXT: &str = r#"<speak><prosody rate="x-fast">Hello, world!</prosody></speak>"#;
 const APPNAME: &str = "lexicc";
 
 fn state_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
