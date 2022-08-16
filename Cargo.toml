@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 aws-config = "0.47.0"
 aws-sdk-polly = "0.17.0"
+dirs = "4.0.0"
 rodio = "0.15.0"
 tokio = { version = "1", features = ["full"] }
