@@ -6,8 +6,11 @@ use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
 
 const FILENAME: &str = "out.ogg";
-const TEXT: &str = r#"<speak><prosody rate="x-fast">Hello, world!</prosody></speak>"#;
 const APPNAME: &str = "lexicc";
+
+fn process_text(text: &str) -> String {
+    format!("<speak><prosody rate=\"x-fast\">{}</prosody></speak>", text)
+}
 
 fn state_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
     let sd = dirs::state_dir().unwrap_or_else(|| {
@@ -21,6 +24,9 @@ fn state_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = String::new();
+    std::io::stdin().read_line(&mut buffer)?;
+
     let state_dir = state_dir()?;
 
     let shared_config = aws_config::load_from_env().await;
@@ -30,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .synthesize_speech()
         .output_format(OutputFormat::OggVorbis)
         .text_type(TextType::Ssml)
-        .text(TEXT)
+        .text(process_text(&buffer))
         .voice_id(VoiceId::Joanna)
         .engine(Engine::Neural)
         .send()
