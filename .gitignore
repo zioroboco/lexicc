@@ -1,3 +1,4 @@
+*.ogg
 .env
 debug/
 target/
