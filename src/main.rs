@@ -11,7 +11,14 @@ use tokio::io::AsyncWriteExt;
 const APPNAME: &str = "lexicc";
 
 fn process_text(text: &str) -> String {
-    format!("<speak><prosody rate=\"x-fast\">{}</prosody></speak>", text)
+    format!(
+        "<speak><prosody rate=\"x-fast\">{}</prosody></speak>",
+        text.replace('"', "&quot;")
+            .replace('&', "&amp;")
+            .replace('\'', "&apos;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+    )
 }
 
 fn create_state_dir(name: &str) -> PathBuf {
