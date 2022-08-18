@@ -1,4 +1,5 @@
 *.ogg
 .env
+.vscode/launch.json
 debug/
 target/
