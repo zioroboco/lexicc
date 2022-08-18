@@ -12,7 +12,7 @@ const APPNAME: &str = "lexicc";
 
 fn process_text(text: &str) -> String {
     format!(
-        "<speak><prosody rate=\"x-fast\">{}</prosody></speak>",
+        r#"<speak><prosody rate="x-fast">{}<break/></prosody></speak>"#,
         text.replace('"', "&quot;")
             .replace('&', "&amp;")
             .replace('\'', "&apos;")
