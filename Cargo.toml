@@ -8,4 +8,5 @@ aws-config = "0.47.0"
 aws-sdk-polly = "0.17.0"
 dirs = "4.0.0"
 rodio = "0.15.0"
+sysinfo = "0.25.2"
 tokio = { version = "1", features = ["full"] }

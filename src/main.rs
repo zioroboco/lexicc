@@ -5,6 +5,7 @@ use std::fs::DirEntry;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::time::Duration;
+use sysinfo::{System, SystemExt};
 use tokio::io::AsyncWriteExt;
 
 const APPNAME: &str = "lexicc";
@@ -31,6 +32,19 @@ fn entries_from(path: &PathBuf) -> Vec<DirEntry> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // I can't figure out how to give the compiler the type information it needs
+    // to be able to collect or otherwise count the number of instances without
+    // looping through the list myself, so... 🤷
+    let s = System::new_all();
+    let instances = s.processes_by_exact_name(APPNAME);
+    let mut count_instances = 0;
+    for _instance in instances {
+        count_instances += 1;
+        if count_instances > 1 {
+            return Ok(());
+        }
+    }
+
     let inbox_dir = create_state_dir("inbox");
     let output_dir = create_state_dir("audio");
 
