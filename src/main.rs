@@ -3,6 +3,7 @@ use aws_sdk_polly::Client;
 use dirs::home_dir;
 use rodio::{Decoder, OutputStream, Sink};
 use std::collections::hash_map::DefaultHasher;
+use std::collections::VecDeque;
 use std::error::Error;
 use std::fs;
 use std::fs::DirEntry;
@@ -68,7 +69,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
-    let mut paragraphs: Vec<String> = Vec::new();
+    let mut paragraphs: VecDeque<String> = VecDeque::new();
 
     loop {
         let inbox_entries = entries_from(&inbox_dir);
@@ -81,13 +82,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 if chunk.is_empty() {
                     continue;
                 }
-                paragraphs.push(chunk.to_string());
+                paragraphs.push_back(chunk.to_string());
             }
             fs::remove_file(&entry.path())?;
         }
 
         while sink.len() < 2 && !paragraphs.is_empty() {
-            let processed_text = process_text(paragraphs.pop().unwrap());
+            let processed_text = process_text(paragraphs.pop_front().unwrap());
             let hash = calculate_hash(&processed_text).to_string();
 
             if !output_dir.join(&hash).exists() {
