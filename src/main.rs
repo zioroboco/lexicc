@@ -90,19 +90,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let processed_text = process_text(paragraphs.pop().unwrap());
             let hash = calculate_hash(&processed_text).to_string();
 
-            let synth_output = client
-                .synthesize_speech()
-                .output_format(OutputFormat::OggVorbis)
-                .voice_id(VoiceId::Olivia)
-                .engine(Engine::Neural)
-                .text_type(TextType::Ssml)
-                .text(processed_text)
-                .send()
-                .await?;
+            if !output_dir.join(&hash).exists() {
+                let synth_output = client
+                    .synthesize_speech()
+                    .output_format(OutputFormat::OggVorbis)
+                    .voice_id(VoiceId::Olivia)
+                    .engine(Engine::Neural)
+                    .text_type(TextType::Ssml)
+                    .text(processed_text)
+                    .send()
+                    .await?;
 
-            let mut blob = synth_output.audio_stream.collect().await?;
-            let mut file = tokio::fs::File::create(output_dir.join(&hash)).await?;
-            file.write_all_buf(&mut blob).await?;
+                let mut blob = synth_output.audio_stream.collect().await?;
+                let mut file = tokio::fs::File::create(output_dir.join(&hash)).await?;
+                file.write_all_buf(&mut blob).await?;
+            }
 
             let file = BufReader::new(fs::File::open(output_dir.join(&hash))?);
             let source = Decoder::new_vorbis(file)?;
