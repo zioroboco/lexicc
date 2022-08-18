@@ -1,11 +1,15 @@
 use aws_sdk_polly::model::{Engine, OutputFormat, TextType, VoiceId};
 use aws_sdk_polly::Client;
+use dirs::home_dir;
 use rodio::{Decoder, OutputStream, Sink};
 use std::collections::hash_map::DefaultHasher;
+use std::error::Error;
+use std::fs;
 use std::fs::DirEntry;
 use std::hash::{Hash, Hasher};
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::thread::sleep;
 use std::time::Duration;
 use sysinfo::{System, SystemExt};
 use tokio::io::AsyncWriteExt;
@@ -24,17 +28,14 @@ fn process_text(text: String) -> String {
 }
 
 fn create_state_dir(name: &str) -> PathBuf {
-    let home_path = dirs::home_dir().unwrap();
+    let home_path = home_dir().unwrap();
     let state_path = home_path.join(".local/state").join(APPNAME).join(name);
-    std::fs::create_dir_all(&state_path).unwrap();
+    fs::create_dir_all(&state_path).unwrap();
     state_path
 }
 
 fn entries_from(path: &PathBuf) -> Vec<DirEntry> {
-    let mut entries: Vec<DirEntry> = std::fs::read_dir(path)
-        .unwrap()
-        .map(|r| r.unwrap())
-        .collect();
+    let mut entries: Vec<DirEntry> = fs::read_dir(path).unwrap().map(|r| r.unwrap()).collect();
     entries.sort_by_key(|entry| entry.path());
     entries
 }
@@ -46,10 +47,8 @@ fn calculate_hash<T: Hash>(t: &T) -> u64 {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // I can't figure out how to give the compiler the type information it needs
-    // to be able to collect or otherwise count the number of instances without
-    // looping through the list myself, so... 🤷
+async fn main() -> Result<(), Box<dyn Error>> {
+    // Exit immediately if we're already running
     let s = System::new_all();
     let instances = s.processes_by_exact_name(APPNAME);
     let mut count_instances = 0;
@@ -78,13 +77,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         for entry in inbox_entries {
-            for chunk in std::fs::read_to_string(&entry.path())?.split('\n') {
+            for chunk in fs::read_to_string(&entry.path())?.split('\n') {
                 if chunk.is_empty() {
                     continue;
                 }
                 paragraphs.push(chunk.to_string());
             }
-            std::fs::remove_file(&entry.path())?;
+            fs::remove_file(&entry.path())?;
         }
 
         while sink.len() < 2 && !paragraphs.is_empty() {
@@ -105,12 +104,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut file = tokio::fs::File::create(output_dir.join(&hash)).await?;
             file.write_all_buf(&mut blob).await?;
 
-            let file = BufReader::new(std::fs::File::open(output_dir.join(&hash))?);
+            let file = BufReader::new(fs::File::open(output_dir.join(&hash))?);
             let source = Decoder::new_vorbis(file)?;
             sink.append(source);
         }
 
-        std::thread::sleep(Duration::from_millis(1000));
+        sleep(Duration::from_millis(1000));
     }
 
     Ok(())
