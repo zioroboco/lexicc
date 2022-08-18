@@ -1,6 +1,7 @@
 use aws_sdk_polly::model::{Engine, OutputFormat, TextType, VoiceId};
 use aws_sdk_polly::Client;
 use dirs::home_dir;
+use regex::Regex;
 use rodio::{Decoder, OutputStream, Sink};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::VecDeque;
@@ -18,9 +19,12 @@ use tokio::io::AsyncWriteExt;
 const APPNAME: &str = "lexicc";
 
 fn process_text(text: String) -> String {
+    let quote_pattern = Regex::new(r#"["“](?P<inner>.*?)[”"]"#).unwrap();
+    let quoted = quote_pattern.replace_all(&text, "(quote) $inner (end quote)");
     format!(
         r#"<speak><prosody rate="x-fast"><p>{}</p></prosody></speak>"#,
-        text.replace('"', "&quot;")
+        quoted
+            .replace('"', " (quote) ")
             .replace('&', "&amp;")
             .replace('\'', "&apos;")
             .replace('<', "&lt;")

@@ -928,6 +928,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-polly",
  "dirs",
+ "regex",
  "rodio",
  "sysinfo",
  "tokio",
