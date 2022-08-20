@@ -20,11 +20,11 @@ const APPNAME: &str = "lexicc";
 
 fn process_text(text: String) -> String {
     let quote_pattern = Regex::new(r#"["“](?P<inner>.*?)(?P<punctuation>[\.\?!])?[”"]"#).unwrap();
-    let quoted = quote_pattern.replace_all(&text, "(quote) $inner (end quote)$punctuation");
+    let text = quote_pattern.replace_all(&text, "(quote) $inner (end quote)$punctuation");
+
     format!(
         r#"<speak><prosody rate="x-fast"><p>{}</p></prosody></speak>"#,
-        quoted
-            .replace('"', " (quote) ")
+        text.replace('"', " (quote) ")
             .replace('&', "&amp;")
             .replace('\'', "&apos;")
             .replace('<', "&lt;")
@@ -83,7 +83,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
 
         for entry in inbox_entries {
-            for chunk in fs::read_to_string(&entry.path())?.split('\n') {
+            let text = fs::read_to_string(&entry.path())?;
+
+            let hyphenated_line_break_pattern = Regex::new(r#"-\r?\n"#).unwrap();
+            let text = hyphenated_line_break_pattern.replace_all(&text, "");
+
+            // This isn't perfect... I'm trying to fix pauses in the middle of
+            // sentences for PDFs that are inserting too many line breaks, by
+            // identifying whether any particular line break looks like it's in
+            // the middle of a sentence. However, sometimes the punctuation I'm
+            // using to reject a line break as legitimate is followed by a
+            // reference, e.g. .[^2] or .2 and the regex crate I'm using doesn't
+            // allow negative lookaheads.
+            let unpunctuated_line_break_pattern =
+                Regex::new(r#"(?P<character>[^\.\?!])[\[\d\]]*\r?\n"#).unwrap();
+            let text = unpunctuated_line_break_pattern.replace_all(&text, "$character ");
+
+            for chunk in text.split('\n') {
                 if chunk.is_empty() {
                     continue;
                 }
