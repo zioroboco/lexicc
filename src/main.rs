@@ -19,8 +19,8 @@ use tokio::io::AsyncWriteExt;
 const APPNAME: &str = "lexicc";
 
 fn process_text(text: String) -> String {
-    let quote_pattern = Regex::new(r#"["“](?P<inner>.*?)[”"]"#).unwrap();
-    let quoted = quote_pattern.replace_all(&text, "(quote) $inner (end quote)");
+    let quote_pattern = Regex::new(r#"["“](?P<inner>.*?)(?P<punctuation>[\.\?!])?[”"]"#).unwrap();
+    let quoted = quote_pattern.replace_all(&text, "(quote) $inner (end quote)$punctuation");
     format!(
         r#"<speak><prosody rate="x-fast"><p>{}</p></prosody></speak>"#,
         quoted
