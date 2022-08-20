@@ -72,6 +72,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
+    sink.set_speed(1.15);
 
     let mut paragraphs: VecDeque<String> = VecDeque::new();
 
@@ -99,7 +100,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let synth_output = client
                     .synthesize_speech()
                     .output_format(OutputFormat::OggVorbis)
-                    .voice_id(VoiceId::Olivia)
+                    .voice_id(VoiceId::Joanna)
                     .engine(Engine::Neural)
                     .text_type(TextType::Ssml)
                     .text(processed_text)
