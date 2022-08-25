@@ -1,3 +1,4 @@
+use async_std::prelude::*;
 use aws_sdk_polly::model::{Engine, OutputFormat, TextType, VoiceId};
 use aws_sdk_polly::Client;
 use dirs::home_dir;
@@ -14,7 +15,6 @@ use std::path::PathBuf;
 use std::thread::sleep;
 use std::time::Duration;
 use sysinfo::{System, SystemExt};
-use tokio::io::AsyncWriteExt;
 
 const APPNAME: &str = "lexicc";
 
@@ -51,7 +51,7 @@ fn calculate_hash<T: Hash>(t: &T) -> u64 {
     s.finish()
 }
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Exit immediately if we're already running
     let s = System::new_all();
@@ -123,9 +123,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .send()
                     .await?;
 
-                let mut blob = synth_output.audio_stream.collect().await?;
-                let mut file = tokio::fs::File::create(output_dir.join(&hash)).await?;
-                file.write_all_buf(&mut blob).await?;
+                let blob = synth_output.audio_stream.collect().await?;
+                let mut file = async_std::fs::File::create(output_dir.join(&hash)).await?;
+                file.write_all(&blob.into_bytes()).await?;
             }
 
             let file = BufReader::new(fs::File::open(output_dir.join(&hash))?);
