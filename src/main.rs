@@ -100,10 +100,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let text = unpunctuated_line_break_pattern.replace_all(&text, "$character ");
 
             for chunk in text.split('\n') {
-                if chunk.is_empty() {
-                    continue;
+                if !chunk.trim().is_empty() {
+                    paragraphs.push_back(chunk.to_string());
                 }
-                paragraphs.push_back(chunk.to_string());
             }
             fs::remove_file(&entry.path())?;
         }
