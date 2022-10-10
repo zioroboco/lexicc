@@ -22,6 +22,9 @@ fn process_text(text: String) -> String {
     let quote_pattern = Regex::new(r#"["“](?P<inner>.*?)(?P<punctuation>[\.\?!])?[”"]"#).unwrap();
     let text = quote_pattern.replace_all(&text, "(quote) $inner (end quote)$punctuation");
 
+    let citation_pattern = Regex::new(r#"\[\^?\d+\]"#).unwrap();
+    let text = citation_pattern.replace_all(&text, "");
+
     format!(
         r#"<speak><prosody rate="x-fast"><p>{}</p></prosody></speak>"#,
         text.replace('"', " (quote) ")
